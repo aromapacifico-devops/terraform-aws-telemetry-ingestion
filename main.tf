@@ -241,6 +241,9 @@ resource "aws_dynamodb_table" "alerts" {
 
 # Archive of every message, in Parquet, for five years.
 resource "aws_s3_bucket" "archive" {
+  #checkov:skip=CKV2_AWS_62:Firehose writes the archive and nothing reacts to each object, see docs/iac-exceptions.md
+  #checkov:skip=CKV_AWS_18:Object access is recorded as S3 data events in the audit trail, see docs/iac-exceptions.md
+  #checkov:skip=CKV_AWS_144:The pilot runs in one Region, see docs/iac-exceptions.md
   provider = aws.project
 
   bucket        = var.names.archive_bucket
@@ -404,10 +407,16 @@ resource "aws_glue_catalog_table" "archive" {
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "archive" {
+  #checkov:skip=CKV_AWS_241:Records wait at most 900 seconds under the AWS owned key and land under the objects key, see docs/iac-exceptions.md
   provider = aws.project
 
   name        = var.names.archive_stream
   destination = "extended_s3"
+
+  server_side_encryption {
+    enabled  = true
+    key_type = "AWS_OWNED_CMK"
+  }
 
   extended_s3_configuration {
     role_arn            = var.role_arns.firehose_delivery
@@ -465,6 +474,7 @@ resource "aws_kinesis_firehose_delivery_stream" "archive" {
 
 # Log groups of the functions and of the push and SMS status, which hold tokens and phone numbers for 30 days.
 resource "aws_cloudwatch_log_group" "logs" {
+  #checkov:skip=CKV_AWS_338:Operational logs keep 30 days, see docs/iac-exceptions.md
   for_each = local.log_groups
   provider = aws.project
 
@@ -477,6 +487,12 @@ resource "aws_cloudwatch_log_group" "logs" {
 
 # Functions. The packages come from the caller, and this module holds no function code.
 resource "aws_lambda_function" "functions" {
+  #checkov:skip=CKV_AWS_115:The account allows 10 concurrent executions and the mappings cap pollers, see docs/iac-exceptions.md
+  #checkov:skip=CKV_AWS_116:Queue functions use the dead letter queue of their queue, see docs/iac-exceptions.md
+  #checkov:skip=CKV_AWS_117:The functions call regional AWS APIs only, see docs/iac-exceptions.md
+  #checkov:skip=CKV_AWS_173:Environment variables hold names only, see docs/iac-exceptions.md
+  #checkov:skip=CKV_AWS_272:No signing profile exists yet, see docs/iac-exceptions.md
+  #checkov:skip=CKV_AWS_50:Traces are outside the current observability design, see docs/iac-exceptions.md
   for_each = local.functions
   provider = aws.project
 
@@ -548,8 +564,7 @@ resource "aws_cloudwatch_log_subscription_filter" "status_logs" {
 resource "aws_pinpointsmsvoicev2_configuration_set" "alerts" {
   provider = aws.project
 
-  name                 = var.names.sms_config_set
-  default_message_type = "TRANSACTIONAL"
+  name = var.names.sms_config_set
 
   tags = merge(var.additional_tags, { Name = var.names.sms_config_set })
 }

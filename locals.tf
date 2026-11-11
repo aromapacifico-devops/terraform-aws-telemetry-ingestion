@@ -98,6 +98,7 @@ locals {
         ALERTS_TABLE          = var.names.alerts_table
         FARMS_TABLE           = var.names.farms_table
         SMS_CONFIGURATION_SET = var.names.sms_config_set
+        SMS_MESSAGE_TYPE      = "TRANSACTIONAL"
       }
     }
   }
