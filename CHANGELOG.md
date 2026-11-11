@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/aromapacifico-devops/terraform-aws-telemetry-ingestion/compare/v1.0.0...v1.0.1) (2026-11-11)
+
+
+### Bug Fixes
+
+* send SMS as transactional and run the shared checks ([#2](https://github.com/aromapacifico-devops/terraform-aws-telemetry-ingestion/issues/2)) ([f4289d6](https://github.com/aromapacifico-devops/terraform-aws-telemetry-ingestion/commit/f4289d64b809592669f41e59608818e4320548f9))
+
 ## [1.0.0]
 
 ### Added
