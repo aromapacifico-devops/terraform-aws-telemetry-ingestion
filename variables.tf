@@ -1,4 +1,6 @@
 # Input variables of the module.
+# Governance input of every module. Resource names arrive complete in names, so this module reads no code.
+# tflint-ignore: terraform_unused_declarations
 variable "client" {
   description = "Client code, used in names and tags."
   type        = string

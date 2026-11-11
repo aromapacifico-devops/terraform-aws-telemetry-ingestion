@@ -383,3 +383,26 @@ run "rejects_an_unknown_environment" {
 
   expect_failures = [var.environment]
 }
+
+run "sends_urgent_sms_as_transactional_and_encrypts_the_stream" {
+  command = plan
+
+  providers = {
+    aws.project = aws.project
+  }
+
+  assert {
+    condition     = aws_lambda_function.functions["delivery_check"].environment[0].variables["SMS_MESSAGE_TYPE"] == "TRANSACTIONAL"
+    error_message = "The delivery check function must send each SMS as transactional, since the configuration set keeps no default."
+  }
+
+  assert {
+    condition     = aws_pinpointsmsvoicev2_configuration_set.alerts.default_message_type == null
+    error_message = "The configuration set must leave the message type to each send."
+  }
+
+  assert {
+    condition     = one(aws_kinesis_firehose_delivery_stream.archive.server_side_encryption).enabled
+    error_message = "The archive stream must encrypt the records it buffers."
+  }
+}

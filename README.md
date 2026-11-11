@@ -61,7 +61,7 @@ The queue sits between IoT Core and the function, so a slow or failing function 
 | Event source mappings | Batch of 10, batching window 0, batch item failures reported, two pollers at most |
 | Log groups | Functions, push status and SMS status, 30 days, encrypted with the data key |
 | Subscription filters | Send push and SMS status entries to the delivery status function |
-| SMS configuration set | Urgent alerts by SMS, with every carrier event written to the SMS status log group |
+| SMS configuration set | Urgent alerts by SMS, with every carrier event written to the SMS status log group. The delivery check function sends each SMS as transactional through `SMS_MESSAGE_TYPE`, since the provider sets no default message type when it creates the set |
 
 ## What it leaves to other places
 
