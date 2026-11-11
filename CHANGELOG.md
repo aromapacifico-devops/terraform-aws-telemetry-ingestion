@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.0]
+
 ### Added
 
 - Ingestion path. IoT rule per environment prefix with `received_at`, `link` and `topic_node_id`, node policy limited to its own topics and shadow, thing group per department, ingestion queue with its dead letter queue, and the ingestion function with batches of 10, no batching window and batch item failures.
