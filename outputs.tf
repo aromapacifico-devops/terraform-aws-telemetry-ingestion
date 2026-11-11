@@ -55,8 +55,13 @@ output "archive_bucket_arn" {
 }
 
 output "push_application_arn" {
-  description = "ARN of the Firebase Cloud Messaging platform application."
-  value       = aws_sns_platform_application.fcm.arn
+  description = "ARN the Firebase Cloud Messaging platform application takes once the operator creates it."
+  value       = local.push_application_arn
+}
+
+output "push_status_log_group_names" {
+  description = "Success and failure log groups that SNS writes to for the push application."
+  value       = [aws_cloudwatch_log_group.logs["push_success"].name, aws_cloudwatch_log_group.logs["push_failure"].name]
 }
 
 output "function_arns" {

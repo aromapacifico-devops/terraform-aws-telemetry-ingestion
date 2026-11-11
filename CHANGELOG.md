@@ -11,4 +11,4 @@
 
 ### Changed
 
-- Inputs take the keys, the role of each purpose in `role_arns`, the final names, the thing groups, the function packages and `alert_ranges`. Output `alert_topic_arn` is replaced by `push_application_arn`, since alerts go to phone endpoints.
+- Inputs take the keys, the role of each purpose in `role_arns`, the final names, the thing groups, the function packages and `alert_ranges`. Output `alert_topic_arn` is replaced by `push_application_arn` and `push_status_log_group_names`, since alerts go to phone endpoints.

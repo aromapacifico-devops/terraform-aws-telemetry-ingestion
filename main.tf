@@ -544,25 +544,6 @@ resource "aws_cloudwatch_log_subscription_filter" "status_logs" {
   depends_on = [aws_lambda_permission.status_logs]
 }
 
-# Push application for Firebase Cloud Messaging. The real credential is loaded outside Terraform, so the
-# state only ever holds this placeholder.
-resource "aws_sns_platform_application" "fcm" {
-  provider = aws.project
-
-  name                         = var.names.push_application
-  platform                     = "GCM"
-  platform_credential          = "loaded-outside-terraform"
-  success_feedback_role_arn    = var.role_arns.push_status_logs
-  failure_feedback_role_arn    = var.role_arns.push_status_logs
-  success_feedback_sample_rate = "100"
-
-  lifecycle {
-    ignore_changes = [platform_credential]
-  }
-
-  depends_on = [aws_cloudwatch_log_group.logs]
-}
-
 # SMS of urgent alerts, with every event of the carrier written to the status log group.
 resource "aws_pinpointsmsvoicev2_configuration_set" "alerts" {
   provider = aws.project

@@ -61,7 +61,6 @@ The queue sits between IoT Core and the function, so a slow or failing function 
 | Event source mappings | Batch of 10, batching window 0, batch item failures reported, two pollers at most |
 | Log groups | Functions, push status and SMS status, 30 days, encrypted with the data key |
 | Subscription filters | Send push and SMS status entries to the delivery status function |
-| SNS platform application | Firebase Cloud Messaging, with success and failure feedback at a sample rate of 100 |
 | SMS configuration set | Urgent alerts by SMS, with every carrier event written to the SMS status log group |
 
 ## What it leaves to other places
@@ -71,7 +70,7 @@ The queue sits between IoT Core and the function, so a slow or failing function 
 | Roles and keys | Security module. This module creates neither |
 | Network | None. The path uses public service endpoints and managed services, and the functions run outside the VPC |
 | Function code | The caller passes a package for each function |
-| Push service credential | Loaded into SNS outside the infrastructure code, as described in [Alert delivery](#alert-delivery) |
+| Push platform application and its credential | Created by the platform operator with the AWS CLI, as described in [Alert delivery](#alert-delivery) |
 | Farm register, receipt route and new range versions | Platform API |
 | Apple push application | Added when an iPhone application exists |
 
@@ -101,15 +100,18 @@ Each item of the ranges table holds every kind of range of one variable from one
 
 The ingestion function publishes each alert straight to the phone endpoints of the farm, under the Firebase Cloud Messaging platform application. SNS logs the status of every push to two log groups named after the application, and a subscription filter passes each entry to the delivery status function, which writes the handoff time. Five minutes after the publish, the delivery check function reads the alert, and it sends one SMS for an urgent alert with no receipt.
 
-The push credential is a secret, and Terraform stores every argument it sends in the state. The module therefore creates the application with a placeholder credential and ignores later changes to it. After the first deployment, the platform operator loads the real Firebase service account key with the AWS CLI.
+The push credential is a secret. SNS checks it with Firebase when it creates the platform application, and Terraform keeps every argument it sends in the state, so the application stays outside the infrastructure code. The module fixes its name, builds its ARN for the ingestion function and creates the two log groups SNS writes to. After each deployment, the platform operator creates the application with the Firebase service account key, the push status role of the security module and a success sample rate of 100.
 
 ```bash
-aws sns set-platform-application-attributes \
-  --platform-application-arn "$(terraform output -raw push_application_arn)" \
-  --attributes PlatformCredential="$(jq @json < service-account.json)"
+role_arn="<push status logs role ARN from the security module>"
+aws sns create-platform-application \
+  --name "<names.push_application>" \
+  --platform GCM \
+  --attributes "$(jq -n --arg key "$(cat service-account.json)" --arg role "$role_arn" \
+    '{PlatformCredential: $key, SuccessFeedbackRoleArn: $role, FailureFeedbackRoleArn: $role, SuccessFeedbackSampleRate: "100"}')"
 ```
 
-Until then, the application holds no working credential and a publish to a phone fails at the push service, which the failure log records.
+A destroy leaves the application in place, and the operator deletes it with `aws sns delete-platform-application` when the environment goes away for good. Until the application exists, an alert is written with no push, and the delivery check records it as undelivered.
 
 ## Usage
 
@@ -181,7 +183,8 @@ Validation rejects a rule name or a Glue name with hyphens, an invalid bucket na
 | `ranges_table_arn` | ARN of the ranges table |
 | `alerts_table_arn` | ARN of the alerts table |
 | `archive_bucket_arn` | ARN of the archive bucket |
-| `push_application_arn` | ARN of the Firebase Cloud Messaging platform application |
+| `push_application_arn` | ARN the Firebase Cloud Messaging platform application takes once the operator creates it |
+| `push_status_log_group_names` | Success and failure log groups SNS writes to for that application |
 | `function_arns` | ARN of each function |
 
 ## Names

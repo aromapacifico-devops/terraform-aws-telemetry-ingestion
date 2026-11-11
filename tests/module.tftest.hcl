@@ -264,7 +264,7 @@ run "initial_ranges_are_version_one" {
   }
 }
 
-run "push_feedback_logs_every_message" {
+run "push_status_reaches_the_status_function" {
   command = plan
 
   providers = {
@@ -272,8 +272,8 @@ run "push_feedback_logs_every_message" {
   }
 
   assert {
-    condition     = aws_sns_platform_application.fcm.success_feedback_sample_rate == "100" && aws_sns_platform_application.fcm.failure_feedback_role_arn == var.role_arns.push_status_logs
-    error_message = "Push status is logged for every message."
+    condition     = output.push_application_arn == "arn:aws:sns:us-east-1:111122223333:app/GCM/fnc-aroma-test-push-fcm" && aws_lambda_function.functions["ingestion"].environment[0].variables.PUSH_APPLICATION_ARN == output.push_application_arn
+    error_message = "The ingestion function publishes under the application the operator creates with the agreed name."
   }
 
   assert {

@@ -48,6 +48,10 @@ locals {
   # SNS names the delivery status log groups of a platform application after the application.
   push_log_group = "sns/${local.region}/${local.account_id}/app/GCM/${var.names.push_application}"
 
+  # SNS validates the push credential when it creates the application, and Terraform would keep that
+  # credential in the state. The operator creates the application with this name outside Terraform.
+  push_application_arn = "arn:${local.partition}:sns:${local.region}:${local.account_id}:app/GCM/${var.names.push_application}"
+
   log_groups = {
     ingestion       = "/aws/lambda/${var.names.ingestion_function}"
     delivery_status = "/aws/lambda/${var.names.status_function}"
@@ -74,7 +78,7 @@ locals {
         ALERTS_TABLE         = var.names.alerts_table
         FARMS_TABLE          = var.names.farms_table
         DELIVERY_QUEUE_URL   = aws_sqs_queue.delivery.url
-        PUSH_APPLICATION_ARN = aws_sns_platform_application.fcm.arn
+        PUSH_APPLICATION_ARN = local.push_application_arn
       }
     }
     delivery_status = {
