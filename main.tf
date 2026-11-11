@@ -242,7 +242,7 @@ resource "aws_dynamodb_table" "alerts" {
 # Archive of every message, in Parquet, for five years.
 resource "aws_s3_bucket" "archive" {
   #checkov:skip=CKV2_AWS_62:Firehose writes the archive and nothing reacts to each object, see docs/iac-exceptions.md
-  #checkov:skip=CKV_AWS_18:Object access is recorded as S3 data events in the audit trail, see docs/iac-exceptions.md
+  #checkov:skip=CKV_AWS_18:Only Firehose writes and Athena reads the archive, see docs/iac-exceptions.md
   #checkov:skip=CKV_AWS_144:The pilot runs in one Region, see docs/iac-exceptions.md
   provider = aws.project
 
